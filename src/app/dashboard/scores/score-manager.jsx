@@ -1,13 +1,9 @@
 "use client";
-
 import { useActionState, useState } from "react";
-import { addScore, updateScore, deleteScore, type ScoreState } from "./actions";
+import { addScore, updateScore, deleteScore } from "./actions";
 import { SubmitButton } from "@/components/submit-button";
 import { shortDate } from "@/lib/format";
-import type { Score } from "@/lib/database.types";
-
 const today = () => new Date().toISOString().slice(0, 10);
-
 /**
  * The five-score ticket: add, edit, delete.
  *
@@ -16,13 +12,11 @@ const today = () => new Date().toISOString().slice(0, 10);
  * out — surfacing the rolling rule at the moment it matters rather than
  * silently dropping a round.
  */
-export function ScoreManager({ scores, locked }: { scores: Score[]; locked: boolean }) {
-  const [addState, addAction] = useActionState<ScoreState, FormData>(addScore, null);
-  const [editing, setEditing] = useState<string | null>(null);
-
+export function ScoreManager({ scores, locked }) {
+  const [addState, addAction] = useActionState(addScore, null);
+  const [editing, setEditing] = useState(null);
   const full = scores.length === 5;
   const oldest = scores[scores.length - 1];
-
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_20rem] lg:items-start">
       {/* ------------------------------------------------------------- list */}
@@ -49,7 +43,8 @@ export function ScoreManager({ scores, locked }: { scores: Score[]; locked: bool
                   <div className="min-w-0 flex-1">
                     <p className="text-sm">{shortDate(score.played_on)}</p>
                     <p className="text-xs text-ink-500">
-                      {score.value} Stableford {score.value >= 36 ? "— a good round" : "points"}
+                      {score.value} Stableford{" "}
+                      {score.value >= 36 ? "— a good round" : "points"}
                     </p>
                   </div>
                   {!locked && (
@@ -118,7 +113,7 @@ export function ScoreManager({ scores, locked }: { scores: Score[]; locked: bool
                   Date played
                 </label>
                 {/* Native date input: no picker dependency, and max stops a
-                    future date before the server has to. */}
+                future date before the server has to. */}
                 <input
                   id="played_on"
                   name="played_on"
@@ -131,7 +126,10 @@ export function ScoreManager({ scores, locked }: { scores: Score[]; locked: bool
               </div>
 
               {addState?.error && (
-                <p role="alert" className="rounded-lg bg-clay-600/15 px-3 py-2.5 text-sm text-clay-400">
+                <p
+                  role="alert"
+                  className="rounded-lg bg-clay-600/15 px-3 py-2.5 text-sm text-clay-400"
+                >
                   {addState.error}
                 </p>
               )}
@@ -147,8 +145,8 @@ export function ScoreManager({ scores, locked }: { scores: Score[]; locked: bool
             </form>
 
             <p className="mt-4 text-xs leading-relaxed text-ink-500">
-              One score per date. Played twice in a day? Log your better round
-              and edit it later if you change your mind.
+              One score per date. Played twice in a day? Log your better round and edit it
+              later if you change your mind.
             </p>
           </>
         )}
@@ -156,14 +154,12 @@ export function ScoreManager({ scores, locked }: { scores: Score[]; locked: bool
     </div>
   );
 }
-
-function EditRow({ score, onDone }: { score: Score; onDone: () => void }) {
-  const [state, action] = useActionState<ScoreState, FormData>(async (prev, fd) => {
+function EditRow({ score, onDone }) {
+  const [state, action] = useActionState(async (prev, fd) => {
     const result = await updateScore(prev, fd);
     if (result?.ok) onDone();
     return result;
   }, null);
-
   return (
     <form action={action} className="space-y-3">
       <input type="hidden" name="id" value={score.id} />
@@ -200,11 +196,7 @@ function EditRow({ score, onDone }: { score: Score; onDone: () => void }) {
         <SubmitButton className="btn-primary !py-2.5 text-sm" pendingLabel="Saving…">
           Save
         </SubmitButton>
-        <button
-          type="button"
-          onClick={onDone}
-          className="btn-ghost !py-2.5 text-sm"
-        >
+        <button type="button" onClick={onDone} className="btn-ghost !py-2.5 text-sm">
           Cancel
         </button>
       </div>

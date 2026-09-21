@@ -3,17 +3,14 @@ import { Wordmark } from "@/components/site-chrome";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { signOut } from "@/app/(auth)/actions";
 import { requireSession } from "@/lib/session";
-
 const LINKS = [
   { href: "/dashboard", label: "Overview" },
   { href: "/dashboard/scores", label: "My scores" },
   { href: "/dashboard/charity", label: "My cause" },
   { href: "/dashboard/winnings", label: "Winnings" },
 ];
-
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({ children }) {
   const session = await requireSession();
-
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-ink-800 bg-ink-950">

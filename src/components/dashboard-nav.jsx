@@ -1,16 +1,13 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
 /**
  * Horizontal section nav for the dashboard and admin shells. Client-side only
  * because it needs the current path to mark the active tab; everything it
  * renders is a plain link.
  */
-export function DashboardNav({ links }: { links: { href: string; label: string }[] }) {
+export function DashboardNav({ links }) {
   const pathname = usePathname();
-
   return (
     <nav className="mx-auto max-w-6xl overflow-x-auto px-4 sm:px-6">
       <ul className="flex gap-1">
@@ -21,7 +18,6 @@ export function DashboardNav({ links }: { links: { href: string; label: string }
             link.href === links[0].href
               ? pathname === link.href
               : pathname.startsWith(link.href);
-
           return (
             <li key={link.href}>
               <Link

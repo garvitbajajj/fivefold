@@ -2,22 +2,15 @@ import Link from "next/link";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { money, shortDate, relativeDays, monthName, splitPayment } from "@/lib/format";
-import type { Draw, DrawEntry, Score, Winner } from "@/lib/database.types";
-
 /**
  * The overview covers all five modules the brief requires:
  * subscription status, scores, chosen charity, participation, and winnings.
  * Each block links through to the page that can change it.
  */
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ welcome?: string }>;
-}) {
+export default async function DashboardPage({ searchParams }) {
   const { welcome } = await searchParams;
   const session = await requireSession();
   const supabase = await createClient();
-
   const [{ data: scores }, { data: entries }, { data: winnings }, { data: nextDraw }] =
     await Promise.all([
       supabase
@@ -37,27 +30,21 @@ export default async function DashboardPage({
         .eq("status", "published")
         .order("period", { ascending: false })
         .limit(1)
-        .maybeSingle<Draw>(),
+        .maybeSingle(),
     ]);
-
-  const scoreList = (scores ?? []) as Score[];
-  const entryList = (entries ?? []) as (DrawEntry & {
-    draws: { period: string; status: string; numbers: number[] | null } | null;
-  })[];
-  const winList = (winnings ?? []) as Winner[];
-
+  const scoreList = scores ?? [];
+  const entryList = entries ?? [];
+  const winList = winnings ?? [];
   const publishedEntries = entryList.filter((e) => e.draws?.status === "published");
   const totalWon = winList.reduce((sum, w) => sum + w.prize_pence, 0);
   const paidOut = winList
     .filter((w) => w.payment_status === "paid")
     .reduce((sum, w) => sum + w.prize_pence, 0);
   const awaiting = winList.filter((w) => w.payment_status === "pending").length;
-
   const ticketReady = scoreList.length === 5 && session.isSubscribed;
   const split = session.subscription
     ? splitPayment(session.subscription.amount_pence, session.profile.charity_percent)
     : null;
-
   return (
     <>
       {welcome && (
@@ -95,7 +82,7 @@ export default async function DashboardPage({
                   ? session.subscription?.cancel_at_period_end
                     ? "ending"
                     : "active"
-                  : (session.subscription?.status as "cancelled" | "lapsed") ?? "none"
+                  : (session.subscription?.status ?? "none")
               }
             />
           </div>
@@ -113,7 +100,9 @@ export default async function DashboardPage({
               <dl className="mt-5 space-y-2 border-t border-ink-700 pt-4 text-sm">
                 <div className="flex justify-between gap-3">
                   <dt className="text-ink-500">
-                    {session.subscription.cancel_at_period_end ? "Access until" : "Renews"}
+                    {session.subscription.cancel_at_period_end
+                      ? "Access until"
+                      : "Renews"}
                   </dt>
                   <dd className="text-right">
                     {shortDate(session.subscription.current_period_end)}
@@ -134,8 +123,8 @@ export default async function DashboardPage({
           ) : (
             <>
               <p className="mt-4 text-sm leading-relaxed text-paper-300">
-                You don&apos;t have a subscription yet, so you&apos;re not in the
-                draw and nothing is reaching a charity.
+                You don&apos;t have a subscription yet, so you&apos;re not in the draw and
+                nothing is reaching a charity.
               </p>
               <Link href="/subscribe" className="btn-primary mt-5 !py-2 text-sm">
                 Join fivefold
@@ -164,8 +153,8 @@ export default async function DashboardPage({
                 </div>
                 {split && (
                   <p className="mt-1.5 text-xs text-ink-500">
-                    {money(split.charity)} of every {money(session.subscription!.amount_pence)}{" "}
-                    payment
+                    {money(split.charity)} of every{" "}
+                    {money(session.subscription.amount_pence)} payment
                   </p>
                 )}
               </div>
@@ -224,7 +213,9 @@ export default async function DashboardPage({
           <div>
             <p className="eyebrow">Your ticket</p>
             <h2 className="mt-2 font-display text-2xl">
-              {scoreList.length === 5 ? "Five scores, locked in" : `${scoreList.length} of 5 logged`}
+              {scoreList.length === 5
+                ? "Five scores, locked in"
+                : `${scoreList.length} of 5 logged`}
             </h2>
           </div>
           <Link href="/dashboard/scores" className="btn-ghost !py-2 text-sm">
@@ -265,7 +256,8 @@ export default async function DashboardPage({
           <div>
             <p className="eyebrow">Participation</p>
             <h2 className="mt-2 font-display text-2xl">
-              {publishedEntries.length} {publishedEntries.length === 1 ? "draw" : "draws"} entered
+              {publishedEntries.length} {publishedEntries.length === 1 ? "draw" : "draws"}{" "}
+              entered
             </h2>
           </div>
           {nextDraw && (
@@ -277,19 +269,21 @@ export default async function DashboardPage({
 
         {publishedEntries.length === 0 ? (
           <p className="px-6 py-10 text-center text-sm text-ink-500">
-            You haven&apos;t been in a draw yet. Complete your five and the next
-            one picks you up automatically.
+            You haven&apos;t been in a draw yet. Complete your five and the next one picks
+            you up automatically.
           </p>
         ) : (
           <ul className="divide-y divide-ink-800">
             {publishedEntries.slice(0, 6).map((entry) => {
               const drawn = entry.draws?.numbers ?? [];
               const win = winList.find((w) => w.draw_id === entry.draw_id);
-
               return (
-                <li key={entry.id} className="flex flex-wrap items-center gap-4 px-6 py-4">
+                <li
+                  key={entry.id}
+                  className="flex flex-wrap items-center gap-4 px-6 py-4"
+                >
                   <div className="w-28 shrink-0">
-                    <p className="text-sm">{monthName(entry.draws!.period)}</p>
+                    <p className="text-sm">{monthName(entry.draws.period)}</p>
                     <p className="text-xs text-ink-500">
                       {entry.match_count} match{entry.match_count === 1 ? "" : "es"}
                     </p>
@@ -329,12 +323,7 @@ export default async function DashboardPage({
     </>
   );
 }
-
-function StatusPill({
-  status,
-}: {
-  status: "active" | "ending" | "cancelled" | "lapsed" | "none";
-}) {
+function StatusPill({ status }) {
   const style = {
     active: "text-moss-400",
     ending: "text-gold-400",
@@ -342,7 +331,6 @@ function StatusPill({
     lapsed: "text-clay-400",
     none: "text-ink-500",
   }[status];
-
   const label = {
     active: "Active",
     ending: "Ending soon",
@@ -350,6 +338,5 @@ function StatusPill({
     lapsed: "Lapsed",
     none: "Inactive",
   }[status];
-
   return <span className={`pill ${style}`}>{label}</span>;
 }

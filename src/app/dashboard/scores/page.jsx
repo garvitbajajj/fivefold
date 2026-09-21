@@ -1,30 +1,24 @@
 import Link from "next/link";
-import type { Metadata } from "next";
 import { ScoreManager } from "./score-manager";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
-import type { Score } from "@/lib/database.types";
-
-export const metadata: Metadata = { title: "My scores" };
-
+export const metadata = { title: "My scores" };
 export default async function ScoresPage() {
   const session = await requireSession("/dashboard/scores");
   const supabase = await createClient();
-
   // Reverse chronological, newest first, per the brief.
   const { data: scores } = await supabase
     .from("scores")
     .select("*")
     .eq("user_id", session.userId)
     .order("played_on", { ascending: false });
-
   return (
     <>
       <div className="mb-8 max-w-2xl">
         <h1 className="font-display text-3xl">Your scores</h1>
         <p className="mt-2 leading-relaxed text-paper-300">
-          The five most recent rounds you log are your ticket. Log a sixth and
-          the oldest drops off automatically.
+          The five most recent rounds you log are your ticket. Log a sixth and the oldest
+          drops off automatically.
         </p>
       </div>
 
@@ -40,7 +34,7 @@ export default async function ScoresPage() {
         </div>
       )}
 
-      <ScoreManager scores={(scores ?? []) as Score[]} locked={!session.isSubscribed} />
+      <ScoreManager scores={scores ?? []} locked={!session.isSubscribed} />
     </>
   );
 }

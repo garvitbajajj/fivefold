@@ -1,7 +1,5 @@
 "use client";
-
 import { useEffect, useRef, useState } from "react";
-
 /**
  * Fades and lifts its children the first time they scroll into view.
  *
@@ -10,22 +8,12 @@ import { useEffect, useRef, useState } from "react";
  * easing. Honours prefers-reduced-motion through the global rule in
  * globals.css, which collapses the animation to nothing.
  */
-export function Reveal({
-  children,
-  delay = 0,
-  className = "",
-}: {
-  children: React.ReactNode;
-  delay?: number;
-  className?: string;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
+export function Reveal({ children, delay = 0, className = "" }) {
+  const ref = useRef(null);
   const [shown, setShown] = useState(false);
-
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -35,11 +23,9 @@ export function Reveal({
       },
       { rootMargin: "0px 0px -10% 0px" },
     );
-
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-
   return (
     <div
       ref={ref}

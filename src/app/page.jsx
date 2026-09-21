@@ -4,11 +4,8 @@ import { Reveal } from "@/components/reveal";
 import { createClient } from "@/lib/supabase/server";
 import { getPlatformStats } from "@/lib/stats";
 import { money, monthName } from "@/lib/format";
-import type { Charity, Draw } from "@/lib/database.types";
-
 export default async function HomePage() {
   const supabase = await createClient();
-
   const [stats, { data: featured }, { data: latestDraw }] = await Promise.all([
     getPlatformStats(),
     supabase
@@ -17,24 +14,23 @@ export default async function HomePage() {
       .eq("is_active", true)
       .order("is_featured", { ascending: false })
       .limit(1)
-      .maybeSingle<Charity>(),
+      .maybeSingle(),
     supabase
       .from("draws")
       .select("*")
       .eq("status", "published")
       .order("period", { ascending: false })
       .limit(1)
-      .maybeSingle<Draw>(),
+      .maybeSingle(),
   ]);
-
   return (
     <>
       <SiteNav />
 
       {/* ---------------------------------------------------------------- hero
-          Leads with the charitable promise, not the sport. The five numbers
-          are the only nod to the game, and they double as the product's
-          central metaphor. */}
+            Leads with the charitable promise, not the sport. The five numbers
+            are the only nod to the game, and they double as the product's
+            central metaphor. */}
       <section className="relative overflow-hidden border-b border-ink-800">
         <div
           aria-hidden
@@ -46,13 +42,12 @@ export default async function HomePage() {
             <h1 className="mt-5 max-w-3xl font-display text-[2.75rem] leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
               Your last five rounds
               <br />
-              are already a{" "}
-              <span className="italic text-gold-400">ticket</span>.
+              are already a <span className="italic text-gold-400">ticket</span>.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-paper-300">
-              Log the five scores you played anyway. Once a month we draw five
-              numbers between 1 and 45 — and a slice of every subscription goes
-              to a cause you choose, whether you win or not.
+              Log the five scores you played anyway. Once a month we draw five numbers
+              between 1 and 45 — and a slice of every subscription goes to a cause you
+              choose, whether you win or not.
             </p>
           </Reveal>
 
@@ -71,9 +66,18 @@ export default async function HomePage() {
           <Reveal delay={220}>
             <dl className="mt-16 grid max-w-3xl grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
               {[
-                { label: "To charity so far", value: money(stats.charity_total_pence, { compact: true }) },
-                { label: "This month's pool", value: money(stats.current_pool_pence, { compact: true }) },
-                { label: "Playing this month", value: stats.active_subscribers.toLocaleString("en-GB") },
+                {
+                  label: "To charity so far",
+                  value: money(stats.charity_total_pence, { compact: true }),
+                },
+                {
+                  label: "This month's pool",
+                  value: money(stats.current_pool_pence, { compact: true }),
+                },
+                {
+                  label: "Playing this month",
+                  value: stats.active_subscribers.toLocaleString("en-GB"),
+                },
                 { label: "Causes to back", value: stats.charities_count.toString() },
               ].map((stat) => (
                 <div key={stat.label}>
@@ -120,7 +124,9 @@ export default async function HomePage() {
                 <div className="card card-hover h-full p-7">
                   <span className="font-mono text-xs text-gold-400">{step.n}</span>
                   <h3 className="mt-4 font-display text-2xl">{step.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-paper-300">{step.body}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-paper-300">
+                    {step.body}
+                  </p>
                 </div>
               </Reveal>
             ))}
@@ -138,14 +144,19 @@ export default async function HomePage() {
                 The pool splits three ways.
               </h2>
               <p className="mt-5 max-w-md leading-relaxed text-paper-300">
-                Half of every subscription funds the prize pool. It divides across
-                three tiers, and anyone on the same tier shares that tier equally.
-                Nobody matches five? The jackpot rolls into next month and grows.
+                Half of every subscription funds the prize pool. It divides across three
+                tiers, and anyone on the same tier shares that tier equally. Nobody
+                matches five? The jackpot rolls into next month and grows.
               </p>
 
               <dl className="mt-9 space-y-px overflow-hidden rounded-xl border border-ink-700">
                 {[
-                  { match: "Match 5", share: "40%", note: "Jackpot — rolls over", gold: true },
+                  {
+                    match: "Match 5",
+                    share: "40%",
+                    note: "Jackpot — rolls over",
+                    gold: true,
+                  },
                   { match: "Match 4", share: "35%", note: "Split equally" },
                   { match: "Match 3", share: "25%", note: "Split equally" },
                 ].map((tier) => (
@@ -158,7 +169,9 @@ export default async function HomePage() {
                     >
                       {tier.match}
                     </span>
-                    <span className="flex-1 text-right text-xs text-ink-500">{tier.note}</span>
+                    <span className="flex-1 text-right text-xs text-ink-500">
+                      {tier.note}
+                    </span>
                     <span className="w-14 text-right font-mono text-lg tnum text-paper-50">
                       {tier.share}
                     </span>
@@ -225,8 +238,8 @@ export default async function HomePage() {
                       ))}
                     </div>
                     <p className="mt-7 border-t border-ink-700 pt-6 text-sm leading-relaxed text-paper-300">
-                      The first five numbers come out at the start of next month.
-                      Get your scores in before then and you are in it.
+                      The first five numbers come out at the start of next month. Get your
+                      scores in before then and you are in it.
                     </p>
                   </>
                 )}
@@ -257,13 +270,18 @@ export default async function HomePage() {
                 </div>
                 <div className="p-8 md:w-3/5 md:p-10">
                   <span className="pill text-moss-400">{featured.category}</span>
-                  <h2 className="mt-4 font-display text-3xl leading-tight">{featured.name}</h2>
+                  <h2 className="mt-4 font-display text-3xl leading-tight">
+                    {featured.name}
+                  </h2>
                   <p className="mt-2 text-paper-300">{featured.tagline}</p>
                   <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-ink-500">
                     {featured.description}
                   </p>
                   <div className="mt-7 flex flex-wrap gap-3">
-                    <Link href={`/charities/${featured.slug}`} className="btn-ghost !py-2.5 text-sm">
+                    <Link
+                      href={`/charities/${featured.slug}`}
+                      className="btn-ghost !py-2.5 text-sm"
+                    >
                       Read their story
                     </Link>
                     <Link href="/charities" className="btn-ghost !py-2.5 text-sm">
@@ -285,9 +303,8 @@ export default async function HomePage() {
               You were going to play anyway.
             </h2>
             <p className="mx-auto mt-5 max-w-lg leading-relaxed text-paper-300">
-              £12 a month, or £120 for the year and two months are on us. Cancel
-              whenever — you keep the time you paid for, and you stay in that
-              month&apos;s draw.
+              £12 a month, or £120 for the year and two months are on us. Cancel whenever
+              — you keep the time you paid for, and you stay in that month&apos;s draw.
             </p>
             <div className="mt-9 flex flex-wrap justify-center gap-3">
               <Link href="/subscribe" className="btn-primary">

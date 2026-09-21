@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-
 const NAV = [
   { href: "/how-it-works", label: "How it works" },
   { href: "/charities", label: "Charities" },
   { href: "/results", label: "Results" },
 ];
-
-export function Wordmark({ className = "" }: { className?: string }) {
+export function Wordmark({ className = "" }) {
   return (
     <Link href="/" className={`font-display text-xl tracking-tight ${className}`}>
       five<span className="text-gold-400">fold</span>
@@ -15,7 +13,6 @@ export function Wordmark({ className = "" }: { className?: string }) {
     </Link>
   );
 }
-
 /**
  * Public site header. A Server Component so the signed-in state is correct on
  * first paint — no flash of "Sign in" for a user who is already logged in.
@@ -28,7 +25,6 @@ export async function SiteNav() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   return (
     <header className="sticky top-0 z-50 border-b border-ink-800 bg-ink-950/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
@@ -98,7 +94,6 @@ export async function SiteNav() {
     </header>
   );
 }
-
 export function SiteFooter() {
   return (
     <footer className="mt-auto border-t border-ink-800 bg-ink-950">
@@ -107,8 +102,8 @@ export function SiteFooter() {
           <div className="max-w-xs">
             <Wordmark />
             <p className="mt-3 text-sm leading-relaxed text-ink-500">
-              Five scores. One draw a month. A share of every subscription going
-              somewhere that needs it.
+              Five scores. One draw a month. A share of every subscription going somewhere
+              that needs it.
             </p>
           </div>
 

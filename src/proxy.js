@@ -1,6 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-
 /**
  * Refreshes the Supabase session on every request and gates private routes.
  *
@@ -9,12 +8,11 @@ import { createServerClient } from "@supabase/ssr";
  * — happen per page and, ultimately, in row level security, so a forged
  * request still cannot read or write anything it should not.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request) {
   let response = NextResponse.next({ request });
-
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
@@ -30,35 +28,28 @@ export async function middleware(request: NextRequest) {
       },
     },
   );
-
   // getUser() revalidates the token with Supabase on every request, which is
   // what makes the session check real rather than a trusted cookie read.
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   const path = request.nextUrl.pathname;
   const isPrivate = path.startsWith("/dashboard") || path.startsWith("/admin");
-
   if (isPrivate && !user) {
     const login = new URL("/login", request.url);
     login.searchParams.set("next", path);
     return NextResponse.redirect(login);
   }
-
   if (path.startsWith("/admin") && user) {
     const { data: isAdmin } = await supabase.rpc("is_admin");
     if (!isAdmin) return NextResponse.redirect(new URL("/dashboard", request.url));
   }
-
   // Signed-in users have no use for the auth screens.
   if (user && (path === "/login" || path === "/signup")) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
-
   return response;
 }
-
 export const config = {
   matcher: [
     // Everything except static assets and image files.

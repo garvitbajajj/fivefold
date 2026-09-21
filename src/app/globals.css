@@ -56,21 +56,42 @@
 }
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(1.25rem); }
-  to   { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 @keyframes fade {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 /* Drawn numbers drop in one after another, like balls out of a machine. */
 @keyframes ball {
-  0%   { opacity: 0; transform: translateY(-1.5rem) scale(0.8); }
-  100% { opacity: 1; transform: none; }
+  0% {
+    opacity: 0;
+    transform: translateY(-1.5rem) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
 }
 @keyframes shimmer {
-  0%, 100% { opacity: 0.45; }
-  50%      { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -91,7 +112,9 @@ body {
 
 /* Respect a user's motion preference everywhere, including the ball drop. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -132,7 +155,9 @@ body {
     background: color-mix(in oklab, var(--color-ink-800) 92%, transparent);
     border: 1px solid var(--color-ink-700);
     border-radius: var(--radius-card);
-    transition: border-color 0.25s ease, transform 0.25s ease;
+    transition:
+      border-color 0.25s ease,
+      transform 0.25s ease;
   }
   .card-hover:hover {
     border-color: var(--color-ink-600);
@@ -151,11 +176,21 @@ body {
     font-weight: 600;
     padding: 0.75rem 1.5rem;
     border-radius: 9999px;
-    transition: background 0.2s ease, transform 0.2s ease;
+    transition:
+      background 0.2s ease,
+      transform 0.2s ease;
   }
-  .btn-primary:hover { background: var(--color-gold-300); transform: translateY(-1px); }
-  .btn-primary:active { transform: translateY(0); }
-  .btn-primary:disabled { opacity: 0.5; pointer-events: none; }
+  .btn-primary:hover {
+    background: var(--color-gold-300);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+  .btn-primary:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
 
   .btn-ghost {
     display: inline-flex;
@@ -167,10 +202,18 @@ body {
     font-weight: 500;
     padding: 0.75rem 1.5rem;
     border-radius: 9999px;
-    transition: border-color 0.2s ease, background 0.2s ease;
+    transition:
+      border-color 0.2s ease,
+      background 0.2s ease;
   }
-  .btn-ghost:hover { border-color: var(--color-paper-300); background: var(--color-ink-800); }
-  .btn-ghost:disabled { opacity: 0.5; pointer-events: none; }
+  .btn-ghost:hover {
+    border-color: var(--color-paper-300);
+    background: var(--color-ink-800);
+  }
+  .btn-ghost:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
 
   .input {
     width: 100%;
@@ -181,8 +224,13 @@ body {
     color: var(--color-paper-100);
     transition: border-color 0.2s ease;
   }
-  .input:focus { border-color: var(--color-gold-400); outline: none; }
-  .input::placeholder { color: var(--color-ink-500); }
+  .input:focus {
+    border-color: var(--color-gold-400);
+    outline: none;
+  }
+  .input::placeholder {
+    color: var(--color-ink-500);
+  }
 
   .label {
     display: block;
@@ -228,4 +276,6 @@ body {
 }
 
 /* Tabular figures wherever numbers are compared down a column. */
-.tnum { font-variant-numeric: tabular-nums; }
+.tnum {
+  font-variant-numeric: tabular-nums;
+}

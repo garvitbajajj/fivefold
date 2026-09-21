@@ -1,18 +1,11 @@
 "use client";
-
 import { use, useActionState } from "react";
 import Link from "next/link";
-import { signIn, type AuthState } from "../actions";
+import { signIn } from "../actions";
 import { SubmitButton } from "@/components/submit-button";
-
-export default function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ next?: string }>;
-}) {
+export default function LoginPage({ searchParams }) {
   const { next } = use(searchParams);
-  const [state, action] = useActionState<AuthState, FormData>(signIn, null);
-
+  const [state, action] = useActionState(signIn, null);
   return (
     <>
       <h1 className="font-display text-3xl">Welcome back.</h1>
@@ -54,7 +47,10 @@ export default function LoginPage({
         </div>
 
         {state?.error && (
-          <p role="alert" className="rounded-lg bg-clay-600/15 px-3 py-2.5 text-sm text-clay-400">
+          <p
+            role="alert"
+            className="rounded-lg bg-clay-600/15 px-3 py-2.5 text-sm text-clay-400"
+          >
             {state.error}
           </p>
         )}

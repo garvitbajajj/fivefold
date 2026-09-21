@@ -1,13 +1,10 @@
 "use client";
-
 import { useActionState } from "react";
 import Link from "next/link";
-import { signUp, type AuthState } from "../actions";
+import { signUp } from "../actions";
 import { SubmitButton } from "@/components/submit-button";
-
 export default function SignupPage() {
-  const [state, action] = useActionState<AuthState, FormData>(signUp, null);
-
+  const [state, action] = useActionState(signUp, null);
   return (
     <>
       <h1 className="font-display text-3xl">Start playing.</h1>
@@ -62,7 +59,10 @@ export default function SignupPage() {
         </div>
 
         {state?.error && (
-          <p role="alert" className="rounded-lg bg-clay-600/15 px-3 py-2.5 text-sm text-clay-400">
+          <p
+            role="alert"
+            className="rounded-lg bg-clay-600/15 px-3 py-2.5 text-sm text-clay-400"
+          >
             {state.error}
           </p>
         )}
@@ -72,8 +72,7 @@ export default function SignupPage() {
         </SubmitButton>
 
         <p className="text-center text-xs leading-relaxed text-ink-500">
-          Payments on this build are simulated. No card is taken and no real
-          money moves.
+          Payments on this build are simulated. No card is taken and no real money moves.
         </p>
       </form>
 

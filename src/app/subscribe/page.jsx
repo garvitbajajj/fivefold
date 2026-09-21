@@ -1,24 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import type { Metadata } from "next";
 import { SiteNav, SiteFooter } from "@/components/site-chrome";
 import { SubscribeForm } from "./subscribe-form";
 import { createClient } from "@/lib/supabase/server";
-import type { Charity } from "@/lib/database.types";
-
-export const metadata: Metadata = { title: "Join" };
-
+export const metadata = { title: "Join" };
 export default async function SubscribePage() {
   const supabase = await createClient();
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   // Signing up first keeps the payment step honest: there is an account to
   // attach the subscription to before any money is discussed.
   if (!user) redirect("/signup");
-
   const [{ data: charities }, { data: profile }, { data: active }] = await Promise.all([
     supabase.from("charities").select("*").eq("is_active", true).order("name"),
     supabase
@@ -34,10 +27,8 @@ export default async function SubscribePage() {
       .gt("current_period_end", new Date().toISOString())
       .maybeSingle(),
   ]);
-
   // Already paid up — no reason to show a checkout.
   if (active) redirect("/dashboard");
-
   return (
     <>
       <SiteNav />
@@ -49,15 +40,15 @@ export default async function SubscribePage() {
             Four decisions and you&apos;re in.
           </h1>
           <p className="mt-4 leading-relaxed text-paper-300">
-            Every one of them is reversible except the good you do, which is
-            rather the point.
+            Every one of them is reversible except the good you do, which is rather the
+            point.
           </p>
         </div>
 
         <div className="mt-12">
           {charities && charities.length > 0 ? (
             <SubscribeForm
-              charities={charities as Charity[]}
+              charities={charities}
               defaultCharityId={profile?.charity_id ?? undefined}
               defaultPercent={profile?.charity_percent ?? undefined}
             />

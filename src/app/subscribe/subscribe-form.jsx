@@ -1,11 +1,8 @@
 "use client";
-
 import { useActionState, useState } from "react";
-import { subscribeAction, type SubscribeState } from "./actions";
+import { subscribeAction } from "./actions";
 import { SubmitButton } from "@/components/submit-button";
-import { money, splitPayment, PLAN_PRICE_PENCE, type Plan } from "@/lib/format";
-import type { Charity } from "@/lib/database.types";
-
+import { money, splitPayment, PLAN_PRICE_PENCE } from "@/lib/format";
 /**
  * The whole join flow on one screen: plan, cause, share, payment.
  *
@@ -13,25 +10,15 @@ import type { Charity } from "@/lib/database.types";
  * is the most persuasive thing here, and it only works if changing the plan or
  * the slider updates the charity figure in front of you.
  */
-export function SubscribeForm({
-  charities,
-  defaultCharityId,
-  defaultPercent,
-}: {
-  charities: Charity[];
-  defaultCharityId?: string;
-  defaultPercent?: number;
-}) {
-  const [state, action] = useActionState<SubscribeState, FormData>(subscribeAction, null);
-  const [plan, setPlan] = useState<Plan>("monthly");
+export function SubscribeForm({ charities, defaultCharityId, defaultPercent }) {
+  const [state, action] = useActionState(subscribeAction, null);
+  const [plan, setPlan] = useState("monthly");
   const [charityId, setCharityId] = useState(defaultCharityId ?? charities[0]?.id ?? "");
   const [percent, setPercent] = useState(defaultPercent ?? 10);
-
   const amount = PLAN_PRICE_PENCE[plan];
   const split = splitPayment(amount, percent);
   const chosen = charities.find((c) => c.id === charityId);
   const perYear = plan === "yearly" ? amount : amount * 12;
-
   return (
     <form action={action} className="grid gap-10 lg:grid-cols-[1fr_22rem] lg:items-start">
       <input type="hidden" name="plan" value={plan} />
@@ -43,7 +30,7 @@ export function SubscribeForm({
         <section>
           <h2 className="font-display text-2xl">1. Pick a plan</h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {(["monthly", "yearly"] as const).map((option) => {
+            {["monthly", "yearly"].map((option) => {
               const active = plan === option;
               return (
                 <button
@@ -51,9 +38,7 @@ export function SubscribeForm({
                   type="button"
                   onClick={() => setPlan(option)}
                   aria-pressed={active}
-                  className={`card p-5 text-left transition-all ${
-                    active ? "!border-gold-400 bg-gold-400/5" : "card-hover"
-                  }`}
+                  className={`card p-5 text-left transition-all ${active ? "!border-gold-400 bg-gold-400/5" : "card-hover"}`}
                 >
                   <div className="flex items-baseline justify-between">
                     <span className="font-display text-xl capitalize">{option}</span>
@@ -93,13 +78,15 @@ export function SubscribeForm({
                   type="button"
                   onClick={() => setCharityId(charity.id)}
                   aria-pressed={active}
-                  className={`card p-4 text-left transition-all ${
-                    active ? "!border-moss-400 bg-moss-500/5" : "card-hover"
-                  }`}
+                  className={`card p-4 text-left transition-all ${active ? "!border-moss-400 bg-moss-500/5" : "card-hover"}`}
                 >
-                  <span className="pill text-moss-400 !text-[0.625rem]">{charity.category}</span>
+                  <span className="pill text-moss-400 !text-[0.625rem]">
+                    {charity.category}
+                  </span>
                   <p className="mt-2 font-medium">{charity.name}</p>
-                  <p className="mt-1 text-xs leading-snug text-ink-500">{charity.tagline}</p>
+                  <p className="mt-1 text-xs leading-snug text-ink-500">
+                    {charity.tagline}
+                  </p>
                 </button>
               );
             })}
@@ -130,8 +117,8 @@ export function SubscribeForm({
           </div>
           <p className="mt-3 text-sm text-paper-300">
             {money(split.charity)} of every payment goes to{" "}
-            <span className="text-moss-300">{chosen?.name ?? "your cause"}</span> — that&apos;s{" "}
-            {money(Math.floor((perYear * percent) / 100))} a year.
+            <span className="text-moss-300">{chosen?.name ?? "your cause"}</span> —
+            that&apos;s {money(Math.floor((perYear * percent) / 100))} a year.
           </p>
         </section>
 
@@ -142,8 +129,8 @@ export function SubscribeForm({
             <div className="flex items-center gap-2 rounded-lg bg-gold-400/10 px-3 py-2.5 text-xs text-gold-300">
               <span aria-hidden>◈</span>
               <p>
-                Simulated checkout. Nothing is charged and no card details leave
-                this page or get stored.
+                Simulated checkout. Nothing is charged and no card details leave this page
+                or get stored.
               </p>
             </div>
 
@@ -212,12 +199,21 @@ export function SubscribeForm({
           role="img"
           aria-label={`${percent}% charity, ${Math.round((split.prizePool / amount) * 100)}% prize pool`}
         >
-          <span className="bg-moss-400" style={{ width: `${(split.charity / amount) * 100}%` }} />
-          <span className="bg-gold-400" style={{ width: `${(split.prizePool / amount) * 100}%` }} />
+          <span
+            className="bg-moss-400"
+            style={{ width: `${(split.charity / amount) * 100}%` }}
+          />
+          <span
+            className="bg-gold-400"
+            style={{ width: `${(split.prizePool / amount) * 100}%` }}
+          />
         </div>
 
         {state?.error && (
-          <p role="alert" className="mt-5 rounded-lg bg-clay-600/15 px-3 py-2.5 text-sm text-clay-400">
+          <p
+            role="alert"
+            className="mt-5 rounded-lg bg-clay-600/15 px-3 py-2.5 text-sm text-clay-400"
+          >
             {state.error}
           </p>
         )}
@@ -227,8 +223,8 @@ export function SubscribeForm({
         </SubmitButton>
 
         <p className="mt-3 text-center text-xs leading-relaxed text-ink-500">
-          Cancel whenever. You keep the time you&apos;ve paid for and stay in
-          that month&apos;s draw.
+          Cancel whenever. You keep the time you&apos;ve paid for and stay in that
+          month&apos;s draw.
         </p>
       </aside>
     </form>
