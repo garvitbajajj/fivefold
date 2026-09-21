@@ -1,0 +1,231 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   fivefold design tokens
+
+   The brief is explicit: this must not look like a golf website, and it must
+   lead with charitable impact rather than sport. So the palette is borrowed
+   from print journalism rather than from clubhouses — deep ink, warm paper,
+   and a single gold accent reserved for the moment of the draw. Moss green
+   marks anything to do with giving. There is no green baize anywhere.
+--------------------------------------------------------------------------- */
+
+@theme {
+  /* Ink — the dark ground the product mostly sits on. */
+  --color-ink-950: #08090d;
+  --color-ink-900: #0d0f15;
+  --color-ink-800: #14171f;
+  --color-ink-700: #1d212b;
+  --color-ink-600: #2a2f3c;
+  --color-ink-500: #3d4353;
+
+  /* Paper — warm off-whites for the light sections. */
+  --color-paper-50: #fbfaf7;
+  --color-paper-100: #f4f2ed;
+  --color-paper-200: #e8e4db;
+  --color-paper-300: #d5cfc2;
+
+  /* Gold — the draw, the win, the single moment of spectacle. Used sparingly
+     so it still means something when it appears. */
+  --color-gold-300: #f2cf8a;
+  --color-gold-400: #e5b45c;
+  --color-gold-500: #d19a33;
+  --color-gold-600: #a97822;
+
+  /* Moss — giving, impact, anything charity-facing. */
+  --color-moss-300: #a8c4a2;
+  --color-moss-400: #7ea577;
+  --color-moss-500: #5a8455;
+  --color-moss-600: #446540;
+
+  /* Clay — errors and destructive actions, warm rather than alarm-red. */
+  --color-clay-400: #d98a6a;
+  --color-clay-500: #c26a47;
+  --color-clay-600: #9d5234;
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --radius-card: 1rem;
+
+  --animate-rise: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade: fade 0.5s ease both;
+  --animate-ball: ball 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  --animate-shimmer: shimmer 2.5s ease-in-out infinite;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(1.25rem); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+/* Drawn numbers drop in one after another, like balls out of a machine. */
+@keyframes ball {
+  0%   { opacity: 0; transform: translateY(-1.5rem) scale(0.8); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes shimmer {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+
+/* ---------------------------------------------------------------------------
+   Base
+--------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-ink-950);
+  color: var(--color-paper-100);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Respect a user's motion preference everywhere, including the ball drop. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Visible focus for keyboard users on every interactive element. */
+:focus-visible {
+  outline: 2px solid var(--color-gold-400);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+::selection {
+  background: var(--color-gold-400);
+  color: var(--color-ink-950);
+}
+
+/* ---------------------------------------------------------------------------
+   Component classes
+
+   Small and few. Anything used two or three times stays inline in Tailwind;
+   these are the handful of patterns that appear on nearly every screen.
+--------------------------------------------------------------------------- */
+
+@layer components {
+  /* Section label: the small monospace eyebrow above a heading. */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-gold-400);
+  }
+
+  .card {
+    background: color-mix(in oklab, var(--color-ink-800) 92%, transparent);
+    border: 1px solid var(--color-ink-700);
+    border-radius: var(--radius-card);
+    transition: border-color 0.25s ease, transform 0.25s ease;
+  }
+  .card-hover:hover {
+    border-color: var(--color-ink-600);
+    transform: translateY(-2px);
+  }
+
+  /* Primary action. Gold, and deliberately the loudest thing on the page —
+     the brief asks for a prominent, persuasive subscribe flow. */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: var(--color-gold-400);
+    color: var(--color-ink-950);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .btn-primary:hover { background: var(--color-gold-300); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.5; pointer-events: none; }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid var(--color-ink-600);
+    color: var(--color-paper-100);
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .btn-ghost:hover { border-color: var(--color-paper-300); background: var(--color-ink-800); }
+  .btn-ghost:disabled { opacity: 0.5; pointer-events: none; }
+
+  .input {
+    width: 100%;
+    background: var(--color-ink-900);
+    border: 1px solid var(--color-ink-600);
+    border-radius: 0.625rem;
+    padding: 0.7rem 0.9rem;
+    color: var(--color-paper-100);
+    transition: border-color 0.2s ease;
+  }
+  .input:focus { border-color: var(--color-gold-400); outline: none; }
+  .input::placeholder { color: var(--color-ink-500); }
+
+  .label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-paper-300);
+    margin-bottom: 0.4rem;
+  }
+
+  /* A drawn number. The same component renders the monthly result, a user's
+     own five scores, and the balls in the admin simulator. */
+  .ball {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 9999px;
+    font-family: var(--font-mono);
+    font-size: 1.125rem;
+    font-weight: 600;
+    border: 1px solid var(--color-ink-600);
+    background: var(--color-ink-800);
+    color: var(--color-paper-200);
+  }
+  .ball-hit {
+    background: var(--color-gold-400);
+    border-color: var(--color-gold-300);
+    color: var(--color-ink-950);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-gold-400) 18%, transparent);
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    border: 1px solid currentColor;
+  }
+}
+
+/* Tabular figures wherever numbers are compared down a column. */
+.tnum { font-variant-numeric: tabular-nums; }
