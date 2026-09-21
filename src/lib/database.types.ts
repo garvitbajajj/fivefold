@@ -162,7 +162,15 @@ export type Database = {
         };
         Insert: CharityEventInsert;
         Update: Partial<CharityEventInsert>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "charity_events_charity_id_fkey";
+            columns: ["charity_id"];
+            isOneToOne: false;
+            referencedRelation: "charities";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       draw_entries: {
         Row: {
@@ -175,7 +183,15 @@ export type Database = {
         };
         Insert: DrawEntryInsert;
         Update: Partial<DrawEntryInsert>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "draw_entries_draw_id_fkey";
+            columns: ["draw_id"];
+            isOneToOne: false;
+            referencedRelation: "draws";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       draws: {
         Row: {
@@ -213,7 +229,22 @@ export type Database = {
         };
         Insert: PaymentInsert;
         Update: Partial<PaymentInsert>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "payments_charity_id_fkey";
+            columns: ["charity_id"];
+            isOneToOne: false;
+            referencedRelation: "charities";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_subscription_id_fkey";
+            columns: ["subscription_id"];
+            isOneToOne: false;
+            referencedRelation: "subscriptions";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       profiles: {
         Row: {
@@ -226,7 +257,15 @@ export type Database = {
         };
         Insert: ProfileInsert;
         Update: Partial<ProfileInsert>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "profiles_charity_id_fkey";
+            columns: ["charity_id"];
+            isOneToOne: false;
+            referencedRelation: "charities";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       scores: {
         Row: {
@@ -273,7 +312,22 @@ export type Database = {
         };
         Insert: WinnerInsert;
         Update: Partial<WinnerInsert>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "winners_draw_id_fkey";
+            columns: ["draw_id"];
+            isOneToOne: false;
+            referencedRelation: "draws";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "winners_entry_id_fkey";
+            columns: ["entry_id"];
+            isOneToOne: false;
+            referencedRelation: "draw_entries";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: { [_ in never]: never };
