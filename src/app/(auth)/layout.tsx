@@ -5,7 +5,7 @@ import { Wordmark } from "@/components/site-chrome";
  * Auth screens get their own chrome: no nav, no footer, nothing to click away
  * from. Just the mark, the form, and the way back.
  */
-export default function AuthLayout({ children }: LayoutProps<"/">) {
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex items-center justify-between px-5 py-6 sm:px-8">
