@@ -1,17 +1,17 @@
 "use client";
 import { useActionState, useState } from "react";
-import { subscribeAction } from "./actions";
+import { startCheckout } from "./actions";
 import { SubmitButton } from "@/components/submit-button";
 import { money, splitPayment, PLAN_PRICE_PENCE } from "@/lib/format";
 /**
- * The whole join flow on one screen: plan, cause, share, payment.
+ * The join flow on one screen: plan, cause, share — then off to Stripe to pay.
  *
  * Kept as a single page rather than a wizard deliberately — the split preview
  * is the most persuasive thing here, and it only works if changing the plan or
  * the slider updates the charity figure in front of you.
  */
 export function SubscribeForm({ charities, defaultCharityId, defaultPercent }) {
-  const [state, action] = useActionState(subscribeAction, null);
+  const [state, action] = useActionState(startCheckout, null);
   const [plan, setPlan] = useState("monthly");
   const [charityId, setCharityId] = useState(defaultCharityId ?? charities[0]?.id ?? "");
   const [percent, setPercent] = useState(defaultPercent ?? 10);
@@ -121,48 +121,6 @@ export function SubscribeForm({ charities, defaultCharityId, defaultPercent }) {
             that&apos;s {money(Math.floor((perYear * percent) / 100))} a year.
           </p>
         </section>
-
-        {/* -------------------------------------------------------- checkout */}
-        <section>
-          <h2 className="font-display text-2xl">4. Payment</h2>
-          <div className="card mt-5 p-6">
-            <div className="flex items-center gap-2 rounded-lg bg-gold-400/10 px-3 py-2.5 text-xs text-gold-300">
-              <span aria-hidden>◈</span>
-              <p>
-                Simulated checkout. Nothing is charged and no card details leave this page
-                or get stored.
-              </p>
-            </div>
-
-            <div className="mt-5 space-y-4">
-              <div>
-                <label className="label" htmlFor="card">
-                  Card number
-                </label>
-                <input
-                  id="card"
-                  className="input tnum"
-                  defaultValue="4242 4242 4242 4242"
-                  inputMode="numeric"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label" htmlFor="exp">
-                    Expiry
-                  </label>
-                  <input id="exp" className="input tnum" defaultValue="12 / 29" />
-                </div>
-                <div>
-                  <label className="label" htmlFor="cvc">
-                    CVC
-                  </label>
-                  <input id="cvc" className="input tnum" defaultValue="123" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
       </div>
 
       {/* ------------------------------------------------------------ summary */}
@@ -218,13 +176,19 @@ export function SubscribeForm({ charities, defaultCharityId, defaultPercent }) {
           </p>
         )}
 
-        <SubmitButton className="btn-primary mt-6 w-full" pendingLabel="Setting you up…">
-          Confirm and join
+        <SubmitButton
+          className="btn-primary mt-6 w-full"
+          pendingLabel="Opening secure checkout…"
+        >
+          Continue to payment
         </SubmitButton>
 
+        {/* Payment happens on Stripe's hosted page: card details never touch
+            this app, and nothing is activated until Stripe confirms. */}
         <p className="mt-3 text-center text-xs leading-relaxed text-ink-500">
-          Cancel whenever. You keep the time you&apos;ve paid for and stay in that
-          month&apos;s draw.
+          You&apos;ll pay on Stripe&apos;s secure checkout. Your membership starts the
+          moment the payment is confirmed. Cancel whenever — you keep the time you&apos;ve
+          paid for.
         </p>
       </aside>
     </form>
