@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { stripe, syncSubscription } from "@/lib/stripe";
 
 /**
  * Admin mutations.
@@ -208,14 +209,33 @@ export async function setUserRole(formData) {
   revalidatePath("/admin/users");
 }
 
-/** Ends a member's subscription immediately, for refunds and disputes. */
+/**
+ * Ends a member's subscription immediately, for refunds and disputes.
+ *
+ * Cancelled on Stripe first, so the member is not billed again, and our row
+ * then updated from Stripe's reply. Seeded demo members were never billed
+ * through Stripe and are ended in the database alone.
+ */
 export async function endSubscription(formData) {
   const id = String(formData.get("subscription_id") ?? "");
   const supabase = await createClient();
-  await supabase
+
+  const { data: sub } = await supabase
     .from("subscriptions")
-    .update({ status: "cancelled", current_period_end: new Date().toISOString() })
-    .eq("id", id);
+    .select("stripe_subscription_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (sub?.stripe_subscription_id) {
+    const cancelled = await stripe().subscriptions.cancel(sub.stripe_subscription_id);
+    await syncSubscription(cancelled);
+  } else {
+    await supabase
+      .from("subscriptions")
+      .update({ status: "cancelled", current_period_end: new Date().toISOString() })
+      .eq("id", id);
+  }
+
   revalidatePath("/admin/users");
 }
 
