@@ -139,8 +139,8 @@ export function SiteFooter() {
         </div>
 
         <p className="mt-10 border-t border-ink-800 pt-6 text-xs text-ink-500">
-          Built as a sample assignment against the Digital Heroes PRD. Payments are
-          simulated; no real money moves.
+          Built as a sample assignment against the Digital Heroes PRD. Payments run
+          through Stripe in test mode; no real money moves.
         </p>
       </div>
     </footer>

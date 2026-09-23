@@ -72,7 +72,8 @@ export default function SignupPage() {
         </SubmitButton>
 
         <p className="text-center text-xs leading-relaxed text-ink-500">
-          Payments on this build are simulated. No card is taken and no real money moves.
+          Payments run through Stripe in test mode, so no real money moves. Use card 4242
+          4242 4242 4242.
         </p>
       </form>
 
