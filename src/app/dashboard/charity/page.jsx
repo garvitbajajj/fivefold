@@ -2,13 +2,35 @@ import Link from "next/link";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { money, shortDate } from "@/lib/format";
+import { stripe, recordPaidDonation } from "@/lib/stripe";
 import { CharitySettings, SubscriptionControls, DonationBox } from "./charity-settings";
 
 export const metadata = { title: "My cause" };
 
-export default async function CharityPage() {
+/**
+ * Stripe returns a donor here with the Checkout Session id. As on the
+ * subscription success page, arriving proves nothing: the session is fetched
+ * from Stripe and the gift recorded only if Stripe says it was paid. The
+ * webhook records the same gift; whichever lands second is a no-op.
+ */
+async function confirmDonation(sessionId, userId) {
+  try {
+    const checkout = await stripe().checkout.sessions.retrieve(sessionId);
+    if (checkout.client_reference_id !== userId) return null;
+    if (await recordPaidDonation(checkout)) return checkout.amount_total;
+  } catch (error) {
+    console.error("verifying donation:", error);
+  }
+  return null;
+}
+
+export default async function CharityPage({ searchParams }) {
+  const { donation } = await searchParams;
   const session = await requireSession("/dashboard/charity");
   const supabase = await createClient();
+
+  // Before the payment history query, so a just-confirmed gift appears in it.
+  const donated = donation ? await confirmDonation(donation, session.userId) : null;
 
   const [{ data: charities }, { data: payments }] = await Promise.all([
     supabase.from("charities").select("*").eq("is_active", true).order("name"),
@@ -32,6 +54,13 @@ export default async function CharityPage() {
             : "Choose where your share goes."}
         </p>
       </div>
+
+      {donated && (
+        <p className="card mb-6 border-moss-500/40 bg-moss-500/5 p-4 text-sm text-moss-300">
+          Thank you. Stripe has confirmed your {money(donated)} gift — every penny of it
+          goes to the cause.
+        </p>
+      )}
 
       <div className="grid gap-5 lg:grid-cols-[1fr_22rem] lg:items-start">
         <div className="space-y-5">

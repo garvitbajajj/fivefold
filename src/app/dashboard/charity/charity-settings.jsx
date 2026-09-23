@@ -234,9 +234,9 @@ export function DonationBox({ charities, defaultCharityId }) {
 
         <SubmitButton
           className="btn-primary w-full !py-2.5 text-sm"
-          pendingLabel="Sending…"
+          pendingLabel="Opening secure checkout…"
         >
-          Donate
+          Donate with Stripe
         </SubmitButton>
       </form>
     </div>
