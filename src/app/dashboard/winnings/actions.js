@@ -7,9 +7,9 @@ import { createClient } from "@/lib/supabase/server";
  * Records the storage path of a proof screenshot against a win.
  *
  * The file itself is uploaded straight from the browser to Supabase Storage,
- * so it never passes through the server. This only writes the path, and the
- * winners_update_own_proof policy limits that to the winner's own row while it
- * is still unapproved.
+ * so it never passes through the server. This only writes the path, through
+ * attach_winner_proof(), which limits it to the winner's own unapproved claim.
+ * Members hold no direct UPDATE on winners at all.
  */
 export async function attachProof(_prev, formData) {
   const winnerId = String(formData.get("winner_id") ?? "");
@@ -28,16 +28,10 @@ export async function attachProof(_prev, formData) {
   if (!path.startsWith(`${user.id}/`))
     return { error: "That file isn't yours to attach." };
 
-  const { error } = await supabase
-    .from("winners")
-    .update({
-      proof_url: path,
-      // Re-submitting after a rejection puts the claim back in the queue.
-      verification_status: "pending",
-      verification_note: null,
-    })
-    .eq("id", winnerId)
-    .eq("user_id", user.id);
+  const { error } = await supabase.rpc("attach_winner_proof", {
+    p_winner_id: winnerId,
+    p_path: path,
+  });
 
   if (error) return { error: error.message };
 

@@ -7,9 +7,10 @@ import { createClient } from "@/lib/supabase/server";
  * Admin mutations.
  *
  * Every one of these relies on the database to enforce permission rather than
- * checking a role here: the draw functions raise `admin only`, and every table
- * write is filtered by an `is_admin()` row level security policy. A forged
- * request reaching these actions still cannot change anything.
+ * checking a role here. Draws, winner reviews, payouts and role changes go
+ * through functions that raise `admin only`; the remaining table writes are
+ * filtered by an `is_admin()` row level security policy. A forged request
+ * reaching these actions still cannot change anything.
  */
 
 // --------------------------------------------------------------------- draws
@@ -72,10 +73,11 @@ export async function reviewWinner(_prev, formData) {
     return { error: "Give a reason when rejecting, so the winner can fix it." };
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("winners")
-    .update({ verification_status: decision, verification_note: note || null })
-    .eq("id", id);
+  const { error } = await supabase.rpc("review_winner", {
+    p_winner_id: id,
+    p_decision: decision,
+    p_note: note || null,
+  });
 
   if (error) return { error: error.message };
 
@@ -87,10 +89,7 @@ export async function markPaid(_prev, formData) {
   const id = String(formData.get("winner_id") ?? "");
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("winners")
-    .update({ payment_status: "paid", paid_at: new Date().toISOString() })
-    .eq("id", id);
+  const { error } = await supabase.rpc("mark_winner_paid", { p_winner_id: id });
 
   // The winners_paid_requires_approval constraint blocks paying an unverified
   // claim. Surface that as a sentence rather than a Postgres error string.
@@ -202,8 +201,10 @@ export async function setUserRole(formData) {
   const role = String(formData.get("role") ?? "");
   if (role !== "admin" && role !== "subscriber") return;
 
+  // Through a function, not a table update: members hold UPDATE on their own
+  // profile's name only, so role changes need an admin check in the database.
   const supabase = await createClient();
-  await supabase.from("profiles").update({ role }).eq("id", id);
+  await supabase.rpc("set_user_role", { p_user_id: id, p_role: role });
   revalidatePath("/admin/users");
 }
 
