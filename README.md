@@ -60,10 +60,10 @@ something.
 | Database | Supabase Postgres 17 |
 | Auth | Supabase Auth, cookie sessions |
 | Storage | Supabase Storage, private bucket for winner proof |
-| Payments | Simulated checkout, isolated behind one argument |
+| Payments | Stripe Checkout (test mode), confirmed by signed webhook |
 | Hosting | Vercel |
 
-Two runtime dependencies: `@supabase/supabase-js` and `@supabase/ssr`.
+Three runtime dependencies: `@supabase/supabase-js`, `@supabase/ssr` and `stripe`.
 
 No component library, no form library, no state manager, no animation library.
 Server Actions handle forms, the URL and the database hold the state, and CSS
@@ -85,18 +85,55 @@ splits and jackpot rollover either all land or none do. A half-run draw would
 be unrecoverable. It also means no client, present or future, can bypass the
 rules, and the admin panel is a thin UI over two functions.
 
-### No service-role key anywhere
+### Payments: nothing activates until Stripe says so
 
-Every privileged write happens inside a `SECURITY DEFINER` function that
-validates its own inputs, so the application only ever holds the publishable
-key. Smaller blast radius, and deployment needs two environment variables
-rather than three.
+Clicking **Continue to payment** writes nothing. It creates a Stripe Checkout
+Session and redirects to Stripe's hosted page; card details never touch this
+app. The subscription does not exist in the database until Stripe confirms the
+first invoice is paid.
+
+Confirmation arrives two ways, and both call the same functions:
+
+- **the webhook** (`/api/stripe/webhook`), signature-verified, for every paid
+  invoice — first payments *and* renewals nobody is watching — plus
+  cancellations, failed renewals and donations
+- **the success page**, which fetches the Checkout Session from Stripe
+  server-side, so the member sees an active account immediately instead of
+  waiting on a webhook
+
+Every write is keyed on a Stripe id (`payments.provider_ref` is unique), so
+whichever path lands second is a no-op, and Stripe's retries are harmless.
+Arriving at the success URL proves nothing — anyone can type it — so the page
+checks with Stripe and confirms the session belongs to the signed-in member.
+
+Cancelling and resuming go to Stripe first, then update our row from Stripe's
+reply, so the two can never disagree. Charity choice changes apply from the
+next renewal: the first invoice uses the cause picked at checkout, renewals use
+whatever the profile says at the time.
+
+### One server-only key, for one job
+
+The service-role key is used for exactly one thing: writing a payment Stripe
+has confirmed. That write comes from a webhook with no signed-in user behind
+it. `record_subscription_invoice` and `record_donation` are granted to the
+service role alone — a member calling them from the browser gets `permission
+denied`. The previous `subscribe()` and `donate()` functions, which let any
+signed-in member activate a subscription without paying, were removed.
+
+Every other privileged write — draws, winner reviews, payouts, role changes —
+still goes through a `SECURITY DEFINER` function that checks the caller.
 
 ### Row level security on every table
 
 Nine tables, all with RLS enabled. A member reads their own rows; an admin
 reads all; a visitor sees published draws and active charities and nothing
-else. Aggregate figures reach the homepage through `platform_stats()`, so a
+else.
+
+RLS decides *which rows* a user may update, not *which columns* — so members
+also hold column-level `UPDATE` only on what they genuinely own:
+`profiles.full_name`, and nothing on `winners`. (Without that, "update your own
+profile" included setting your own `role` to `admin`, and "attach proof to your
+own claim" included rewriting `prize_pence`. Both were reproduced and closed.) Aggregate figures reach the homepage through `platform_stats()`, so a
 visitor can see that £144 has gone to charity without being able to read a
 single payment row.
 
@@ -198,7 +235,7 @@ three parts always sum to exactly what was charged.
 
 ```bash
 npm install
-cp .env.example .env.local   # fill in your Supabase URL and publishable key
+cp .env.example .env.local   # fill in Supabase and Stripe keys
 npm run dev
 ```
 
@@ -207,13 +244,22 @@ through the Supabase SQL editor or with the CLI.
 
 ### Environment
 
-```
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
-```
+| Variable | Where | Exposed to browser |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → API keys | yes, safe |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → API keys (publishable) | yes, safe |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → API keys (secret) | **never** |
+| `STRIPE_SECRET_KEY` | Stripe → Developers → API keys (test) | **never** |
+| `STRIPE_WEBHOOK_SECRET` | Stripe → Developers → Webhooks | **never** |
 
-Both are safe in the browser: every table is behind RLS and no service-role key
-exists.
+**Stripe webhook.** Add an endpoint at `https://<your-site>/api/stripe/webhook`
+listening for `invoice.paid`, `customer.subscription.updated`,
+`customer.subscription.deleted` and `checkout.session.completed`, then copy its
+signing secret. Locally the success page confirms payments on its own; to
+exercise renewals and cancellations too, run
+`stripe listen --forward-to localhost:3000/api/stripe/webhook`.
+
+**Test card:** `4242 4242 4242 4242`, any future expiry, any CVC.
 
 **One Supabase setting matters.** Under Authentication → Sign In / Providers →
 Email, turn **Confirm email off**. With it on, a new signup waits for a
@@ -225,9 +271,19 @@ confirmation link instead of reaching the dashboard.
 
 ```bash
 psql "$DATABASE_URL" -f supabase/tests/draw_engine_test.sql
+psql "$DATABASE_URL" -f supabase/tests/payments_test.sql
 ```
 
-The draw engine is the money path, so it has a real test. Two phases:
+The two money paths each have a real test.
+
+**Payments** — calls the functions the Stripe webhook uses, as the service
+role would: a first payment splits 25% / 50% / 25% to the penny; the same
+invoice delivered twice writes one payment; a renewal after the member changes
+cause and share follows the *new* choice and extends the same subscription; a
+donation delivered twice is recorded once, entirely to the charity; and a
+signed-in member cannot call either function.
+
+**Draw engine** — two phases:
 
 1. **Invariants** — eligibility, five distinct in-range numbers, pool
    accounting, and match counts recomputed independently against the engine's
@@ -265,14 +321,13 @@ Sums to £246.00 exactly.
 
 ## Known limits
 
-- **Payments are simulated.** No card is taken and no money moves. The gateway
-  is isolated: `subscribe()` accepts a `p_provider_ref`, and wiring Stripe means
-  creating a PaymentIntent and passing its id. Prices, the split and the period
-  dates stay in SQL either way.
-- **Renewals are not automatic.** `expire_lapsed_subscriptions()` moves an
-  expired subscription to `lapsed` or `cancelled`, and is called
-  opportunistically on dashboard load rather than by a scheduled job. Real
-  renewal belongs to the payment provider's webhook.
+- **Stripe runs in test mode.** Real cards are declined; use `4242 4242 4242
+  4242`. Going live is a key swap, not a code change.
+- **Seeded demo members were never billed through Stripe.** Their
+  subscriptions have no `stripe_subscription_id`; cancelling one updates the
+  database alone. Anyone who subscribes through the site is fully on Stripe.
+- **Refunds happen in the Stripe dashboard.** A refund doesn't yet reverse the
+  split in the ledger; `charge.refunded` would be the event to handle.
 - **Draws are run by hand.** The brief calls for a monthly cadence with admin
   control over publishing, so there is no cron. A scheduled job could call
   `simulate_draw` and leave it for review.
