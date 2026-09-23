@@ -51,7 +51,8 @@ export async function proxy(request) {
 }
 export const config = {
   matcher: [
-    // Everything except static assets and image files.
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Everything except static assets, image files, and the Stripe webhook —
+    // which carries no session and verifies itself by signature instead.
+    "/((?!_next/static|_next/image|favicon.ico|api/stripe|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
