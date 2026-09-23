@@ -1,21 +1,13 @@
 /**
- * Reads the two Supabase environment variables, or fails with a sentence that
- * says what to do about it.
+ * Environment variables, or a sentence saying what to do about a missing one.
  *
- * Without this, a missing variable surfaces as `supabaseUrl is required`
- * thrown from inside the proxy — which takes down every route, including
- * static pages, and shows a bare "Internal Server Error" with no clue as to
- * the cause. Deployments miss these variables often enough that the error is
- * worth spelling out.
+ * Without this, a missing variable surfaces as something like
+ * `supabaseUrl is required` thrown from inside the proxy — which takes down
+ * every route, including static pages, and shows a bare "Internal Server
+ * Error" with no clue as to the cause.
  */
-export function supabaseEnv() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  const missing = [
-    !url && "NEXT_PUBLIC_SUPABASE_URL",
-    !key && "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-  ].filter(Boolean);
+export function requireEnv(...names) {
+  const missing = names.filter((name) => !process.env[name]);
 
   if (missing.length > 0) {
     throw new Error(
@@ -26,5 +18,22 @@ export function supabaseEnv() {
     );
   }
 
+  return names.map((name) => process.env[name]);
+}
+
+/** The two public Supabase values, safe in the browser. */
+export function supabaseEnv() {
+  // Referenced literally, not through process.env[name]: Next only inlines
+  // NEXT_PUBLIC_ variables into the client bundle when it can see the name.
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    requireEnv(
+      ...[
+        !url && "NEXT_PUBLIC_SUPABASE_URL",
+        !key && "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      ].filter(Boolean),
+    );
+  }
   return { url, key };
 }
