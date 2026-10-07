@@ -35,7 +35,7 @@ the draw engine is wrong — so it is stated here first.
 | Admin | `admin@fivefold.app` | `fivefold2026` |
 
 The member account has a full five-score ticket, an active yearly subscription
-at a 25% charity share, and a £30.75 win from the August draw that has been
+at a 25% charity share, and a £30.75 win from last month's draw that has been
 verified and paid — so the whole winner lifecycle is visible without setting
 anything up.
 
@@ -43,7 +43,7 @@ Fourteen further members are seeded with subscriptions, payments spread across
 all eight charities, and scores. Two of them deliberately hold fewer than five
 scores, to show that a partial ticket sits the month out.
 
-**September's draw is left simulated but unpublished on purpose**, so the
+**This month's draw is left simulated but unpublished on purpose**, so the
 review-before-publish step can be seen and the Publish button actually does
 something.
 
@@ -240,7 +240,9 @@ npm run dev
 ```
 
 Apply the migrations in `supabase/migrations/` in filename order, either
-through the Supabase SQL editor or with the CLI.
+through the Supabase SQL editor or with the CLI, then run `supabase/seed.sql`
+once to create the test logins and the demo data. The seed uses dates relative
+to today, so "last month's draw" is always last month.
 
 ### Environment
 
@@ -307,11 +309,11 @@ signup → subscribe with live split preview → five scores → duplicate-date
 rejection → rolling-five drop → admin promotion → live draw simulation →
 proof upload → approve → mark paid.
 
-August's seeded draw, £246.00 pool:
+Last month's seeded draw, £246.00 pool:
 
 | Tier | Share | Outcome |
 | --- | --- | --- |
-| Match 5 | 40% | £98.40 unclaimed, rolled into September |
+| Match 5 | 40% | £98.40 unclaimed, rolled into this month |
 | Match 4 | 35% | £86.10 to a sole winner |
 | Match 3 | 25% | £61.50 split — £30.75 each |
 
